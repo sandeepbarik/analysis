@@ -1,0 +1,148 @@
+TRAI DATA ANALYSIS 
+
+1.----------import packages and define some constants---------------
+
+import pandas as pd 
+import numpy as np 
+import matplotlib.pyplot as plt 
+
+# we will define some constants 
+
+# name of the csv dataset 
+DATASET_FILENAME = 'sept18_publish.csv'
+
+# define the operator to be filtered upon. 
+CONST_OPERATOR = 'JIO'
+
+# define the state to be filtered upon. 
+CONST_STATE = 'Delhi'
+
+# define the the technology to be filtered upon 
+CONST_TECHNOLOGY = '4G'
+
+
+2.----------------define some list that will store the final result-------------------
+
+# define lists 
+final_download_speeds = [] 
+final_upload_speeds = [] 
+final_states = [] 
+final_operators = [] 
+
+
+3.-----------------import the file using pandas. This will create a data frame which we will work on-----------------
+
+df = pd.read_csv(DATASET_FILENAME) 
+
+# assign headers for each of the columns based on the data 
+# this allows us to access columns easily 
+
+df.columns = ['Service Provider', 'Technology', 'Test Type', 
+            'Data Speed', 'Signal Strength', 'State'] 
+            
+4.----find all the unique states and operators in this dataset and store them into corresponding states and operators list.------
+
+# find and display the unique states 
+states = df['State'].unique() 
+print('STATES Found: ', states) 
+
+# find and display the unique operators 
+operators = df['Service Provider'].unique() 
+print('OPERATORS Found: ', operators) 
+
+5.------------------define a function which will keep operator constant and perform loop through all state or that const operator and will give all values---------------------
+
+
+# filter out the operator and technology 
+# first as this will be common for all 
+filtered = df[(df['Service Provider'] == CONST_OPERATOR) 
+			& (df['Technology'] == CONST_TECHNOLOGY)] 
+
+# iterate through each of the states 
+for state in states: 
+
+	# create new dataframe which contains 
+	# only the data of the current state 
+	base = filtered[filtered['State'] == state] 
+
+	# filter only download speeds based on test type 
+	down = base[base['Test Type'] == 'download'] 
+
+	# filter only upload speeds based on test type 
+	up = base[base['Test Type'] == 'upload'] 
+
+	# calculate mean of speeds in Data Speed 
+	# column using the Pandas.mean() method 
+	avg_down = down['Data Speed'].mean() 
+
+	# calculate mean of speeds 
+	# in Data Speed column 
+	avg_up = up['Data Speed'].mean() 
+
+	# discard values if mean is not a number(nan) 
+	# and append only the valid ones 
+	if (pd.isnull(avg_down) or pd.isnull(avg_up)): 
+		down, up = 0, 0
+	
+	else: 
+		final_states.append(state) 
+		final_download_speeds.append(avg_down) 
+		final_upload_speeds.append(avg_up) 
+
+		# print output upto 2 decimal places 
+		print(str(state) + ' -- Avg. Download: ' +
+						str('%.2f' % avg_down) +
+		' Avg. Upload: ' + str('%.2f' % avg_up)) 
+        
+ 6.-----------------plot the data in a chart using matplotlib------------------------
+ 
+ fig, ax = plt.subplots(figsize=(15,8)) #fig size increases or decreases plot size
+
+# the width of each bar 
+bar_width = 0.3
+
+# opacity of each bar 
+opacity = 0.8
+
+# store the positions 
+index = np.arange(len(final_states)) 
+
+# the plt.bar() takes in the position 
+# of the bars, data to be plotted, 
+# width of each bar and some other 
+# optional parameters, like the opacity and colour 
+
+# plot the download bars 
+bar_download = plt.bar(index, final_download_speeds, 
+					bar_width, alpha=opacity, 
+					color='b', label='Download') 
+# plot the upload bars 
+bar_upload = plt.bar(index + bar_width, final_upload_speeds, 
+						bar_width, alpha=opacity, color='g', 
+											label='Upload') 
+
+# title of the graph 
+plt.title('Avg. Download/Upload speed for '
+					+ str(CONST_OPERATOR)) 
+
+# the x-axis label 
+plt.xlabel('States') 
+
+# the y-axis label 
+plt.ylabel('Average Speeds in Kbps') 
+
+# the label below each of the bars, 
+# corresponding to the states 
+plt.xticks(index + bar_width, final_states, rotation=90) 
+
+# draw the legend 
+plt.legend() 
+
+# make the graph layout tight 
+plt.tight_layout() 
+
+# show the graph 
+plt.show() 
+
+ 
+ 
